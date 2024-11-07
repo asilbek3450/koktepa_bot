@@ -10,3 +10,10 @@ class RegisterState(StatesGroup):
 class CategoryState(StatesGroup):
     name = State()
     
+
+class ProductState(StatesGroup):
+    category_id = State()
+    name = State()
+    price = State()
+    image = State()
+

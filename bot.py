@@ -2,10 +2,11 @@ import logging
 from aiogram import Bot, Dispatcher, executor, types
 from config import API_TOKEN, ADMINS
 from functions import check_is_admin
-from keyboards import start_keyboards, admin_start_keyboards, contact
+from keyboards import start_keyboards, admin_start_keyboards, contact, menu_keyboards, product_keyboards_by_category
 from database import create_db, user_in_database, add_data_to_users, \
-                        hozirgi_userni_olish, add_data_to_category, get_all_categories
-from state import RegisterState, CategoryState
+                        hozirgi_userni_olish, add_data_to_category, get_all_categories,\
+                        get_all_products, add_data_to_product, get_c_id_by_name, get_product_by_id
+from state import RegisterState, CategoryState, ProductState
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 logging.basicConfig(level=logging.INFO)
@@ -56,12 +57,7 @@ async def get_telefon(message: types.Message, state):
 
 @dp.message_handler(lambda message: message.text == '🍴 Menu')
 async def get_menu(message: types.Message):
-    menu_keyboards = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    categories = get_all_categories()
-    for kb in categories:
-        menu_keyboards.add(types.KeyboardButton(kb['name']))
-        
-    await message.answer("Menu", reply_markup=menu_keyboards)
+    await message.answer("Menu", reply_markup=menu_keyboards())
 
 
 @dp.message_handler(lambda message: message.text == 'Category ✏️/➕')
@@ -79,7 +75,67 @@ async def get_category_name(message: types.Message, state):
     await message.answer("Category qo'shildi! ✅", reply_markup=admin_start_keyboards)
 
 
+@dp.message_handler(lambda message: message.text == 'Mahsulot ✏️/➕')
+async def add_product(message: types.Message):
+    if check_is_admin(ADMINS, message.from_user.id):
+        await message.answer("Bu mahsulot qaysi kategoriyada: ", reply_markup=menu_keyboards())
+        await ProductState.category_id.set()
 
+
+@dp.message_handler(state=ProductState.category_id)
+async def get_category_id(message: types.Message, state):
+    category = message.text
+    c_id = get_c_id_by_name(category)
+    await state.update_data(category_id=c_id)
+    await message.answer("Mahsulot nomini kiriting: ")
+    await ProductState.name.set()
+    
+
+@dp.message_handler(state=ProductState.name)
+async def get_category_id(message: types.Message, state):
+    nomi = message.text
+    await state.update_data(name=nomi)
+    await message.answer("💵 Mahsulot narxini kiriting: ")
+    await ProductState.price.set()
+
+
+@dp.message_handler(state=ProductState.price)
+async def get_category_id(message: types.Message, state):
+    narxi = message.text
+    await state.update_data(price=narxi)
+    await message.answer("📸 Mahsulot rasmini kiriting: ")
+    await ProductState.image.set()
+    
+
+@dp.message_handler(state=ProductState.image, content_types=types.ContentType.PHOTO)
+async def get_category_id(message: types.Message, state):
+    rasm = message.photo[-1].file_id
+    await state.update_data(image=rasm)
+    await message.answer("Mahsulot saqlandi ✅")
+    data = await state.get_data()
+    add_data_to_product(data.get('category_id'), data.get('name'), data.get('price'), data.get('image'))
+    await state.finish()
+    
+
+
+@dp.message_handler()
+async def menu_handler(message: types.Message):
+    if message.text in [category['name'] for category in get_all_categories()]:  # 🍔 Burgerlar
+        c_id = get_c_id_by_name(message.text)
+        await message.answer("Mahsulotlar", reply_markup=product_keyboards_by_category(c_id))  # 🍔 Mini Burger
+    elif message.text == '🛍 Mening zakazlarim':
+        await message.answer("Sizning zakazlarizm")
+
+    elif message.text == '✍️ Ariza qoldirish':
+        await message.answer("Ariza qoldirish")
+
+
+
+@dp.callback_query_handler()
+async def callback_handler(call: types.CallbackQuery):
+    data = call.data
+    product = get_product_by_id(data)
+    await call.message.answer_photo(photo=product.get('image'), caption=f"{product.get('name')} - {product.get('price')} so'm")
 
 if __name__ == '__main__':
-    executor.start_polling(dp, skip_updates=True)
+    executor.start_polling(dp, skip_updates=True, on_startup=create_db())

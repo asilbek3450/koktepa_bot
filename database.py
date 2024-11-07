@@ -12,17 +12,18 @@ def create_db():
                 user_id INTEGER
                 )""")
     
-    cur.execute("""CREATE TABLE IF NOT EXISTS CATEGORY(
+    cur.execute("""CREATE TABLE IF NOT EXISTS category(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name VARCHAR(100)
                 )""")
     
-    cur.execute("""CREATE TABLE IF NOT EXISTS PRODUCT(
+    cur.execute("""CREATE TABLE IF NOT EXISTS product(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name VARCHAR(100),
                 price INTEGER,
                 category_id INTEGER,
-                FOREIGN KEY (category_id) REFERENCES CATEGORY(id))""")
+                image TEXT,
+                FOREIGN KEY (category_id) REFERENCES category(id))""")
     
     conn.commit()
 
@@ -43,10 +44,26 @@ def add_data_to_users(name, telefon, user_id):
 
 
 def add_data_to_category(name):
-    cur.execute("INSERT INTO CATEGORY(name) VALUES(?)", (name,))
+    cur.execute("INSERT INTO category(name) VALUES(?)", (name,))
     conn.commit()
 
+def add_data_to_product(category_id, name, price, image):
+    cur.execute("INSERT INTO product(category_id, name, price, image) VALUES(?, ?, ?, ?)", (category_id, name, price, image))
+    conn.commit()
 
 def get_all_categories():
-    categories = cur.execute("SELECT * FROM CATEGORY").fetchall()
-    return categories
+    categories = cur.execute("SELECT * FROM category").fetchall()
+    return [dict(row) for row in categories]  # Row obyektlarini dict ga aylantirish
+
+def get_all_products():
+    products = cur.execute("SELECT * FROM product").fetchall()
+    return [dict(row) for row in products]  # Row obyektlarini dict ga aylantirish
+
+def get_product_by_id(id):
+    product = cur.execute("SELECT * FROM product WHERE id=?", (id,)).fetchone()
+    return dict(product) if product else None
+
+
+def get_c_id_by_name(name):
+    row = cur.execute("SELECT id FROM category WHERE name=?", (name,)).fetchone()
+    return row['id'] if row else None  # Agar topilmasa, None qaytaradi
