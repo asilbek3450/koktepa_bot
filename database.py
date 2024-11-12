@@ -55,6 +55,15 @@ def get_all_categories():
     categories = cur.execute("SELECT * FROM category").fetchall()
     return [dict(row) for row in categories]  # Row obyektlarini dict ga aylantirish
 
+def get_category_id(name):
+    category = cur.execute("SELECT * FROM category WHERE name=?", (name,)).fetchone()
+    return dict(category) if category else None
+
+def delete_category_by_id(id):
+    cur.execute("DELETE FROM category WHERE id=?", (id,))
+    conn.commit()
+
+
 def get_all_products():
     products = cur.execute("SELECT * FROM product").fetchall()
     return [dict(row) for row in products]  # Row obyektlarini dict ga aylantirish

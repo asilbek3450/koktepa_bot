@@ -9,6 +9,10 @@ class RegisterState(StatesGroup):
 
 class CategoryState(StatesGroup):
     name = State()
+
+
+class DelCategoryState(StatesGroup):
+    name = State()
     
 
 class ProductState(StatesGroup):

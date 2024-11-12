@@ -32,4 +32,4 @@ def product_keyboards_by_category(category_id):
     for product in products:
         if product['category_id'] == category_id:
             keyboard.add(InlineKeyboardButton(product['name'], callback_data=product['id']))
-    return keyboard
+    return keyboard.add(InlineKeyboardButton('Orqaga', callback_data='back'))
