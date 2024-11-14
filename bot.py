@@ -2,7 +2,7 @@ import logging
 from aiogram import Bot, Dispatcher, executor, types
 from config import API_TOKEN, ADMINS
 from functions import check_is_admin
-from keyboards import start_keyboards, admin_start_keyboards, contact, menu_keyboards, product_keyboards_by_category
+from keyboards import start_keyboards, admin_start_keyboards, contact, menu_keyboards, product_keyboards_by_category, product_keyboards_by_id
 from database import create_db, user_in_database, add_data_to_users, get_user_id, hozirgi_userni_olish, \
                       add_data_to_category, get_all_categories, get_category_id, delete_category_by_id, \
                       get_all_products, add_data_to_product, get_c_id_by_name, get_product_by_id, \
@@ -217,7 +217,25 @@ async def confirm_order(message: types.Message):
 @dp.message_handler(lambda message: message.text == "❌ Bekor qilish")
 async def cancel_order(message: types.Message):
     await message.answer("Zakaz bekor qilindi! ❌") 
+
+
+@dp.message_handler()
+async def category_handler(message: types.Message):
+    text = message.text
+    kategory_id = get_c_id_by_name(text)
+    await message.answer(text=f"{text}ni ichidagi mahsulotlar", reply_markup=product_keyboards_by_category(kategory_id))
+
+@dp.callback_query_handler()
+async def product_handler(call: types.CallbackQuery):
+
+    if call.data == "back":
+        await call.message.answer("Menu", reply_markup=menu_keyboards())
+        return
     
+    product_id = call.data
+    mahsulot = get_product_by_id(id=product_id)
+    c = f"{mahsulot.get('name')} - narxi: {mahsulot.get('price')} so'm" # SyntaxError: f-string: unmatched '('
+    await call.message.answer_photo(photo=mahsulot.get("image"), caption=c, reply_markup=product_keyboards_by_id(product_id))
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True, on_startup=on_startup)

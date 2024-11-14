@@ -33,3 +33,10 @@ def product_keyboards_by_category(category_id):
         if product['category_id'] == category_id:
             keyboard.add(InlineKeyboardButton(product['name'], callback_data=product['id']))
     return keyboard
+
+
+def product_keyboards_by_id(product_id):
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(InlineKeyboardButton('🛒 Savatchaga qo\'shish', callback_data=f'add_to_cart_{product_id}'))
+    keyboard.add(InlineKeyboardButton('🔙 Orqaga', callback_data='back'))
+    return keyboard
