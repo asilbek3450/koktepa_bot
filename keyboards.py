@@ -23,7 +23,7 @@ def menu_keyboards():
     categories = get_all_categories()
     for category in categories:
         keyboard.add(KeyboardButton(category['name']))
-    return keyboard
+    return keyboard.add(KeyboardButton('🔙 Orqaga'))
 
 
 def product_keyboards_by_category(category_id):
@@ -32,4 +32,4 @@ def product_keyboards_by_category(category_id):
     for product in products:
         if product['category_id'] == category_id:
             keyboard.add(InlineKeyboardButton(product['name'], callback_data=product['id']))
-    return keyboard.add(InlineKeyboardButton('Orqaga', callback_data='back'))
+    return keyboard

@@ -14,6 +14,10 @@ class CategoryState(StatesGroup):
 class DelCategoryState(StatesGroup):
     name = State()
     
+class DelProductState(StatesGroup):
+    category_id = State()
+    product_id = State()
+    confirm = State()
 
 class ProductState(StatesGroup):
     category_id = State()
